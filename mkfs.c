@@ -20,8 +20,8 @@
 // Disk layout:
 // [ boot block | sb block | log | inode blocks | free bit map | data blocks ]
 
-int nbitmap = FSSIZE/(BSIZE*8) + 1;
-int ninodeblocks = NINODES / IPB + 1;
+int nbitmap = FSSIZE/(BSIZE*8) + 1;   // Number of bitmaps in the system
+int ninodeblocks = NINODES / IPB + 1; // Number of blocks needed for keeping the max amount of inodes permitted in xv6(200 inodes)
 int nlog = LOGSIZE;
 int nmeta;    // Number of meta blocks (boot, sb, nlog, inode, bitmap)
 int nblocks;  // Number of data blocks
