@@ -16,8 +16,8 @@ void test1(void){
   printf(2, "TEST %d:\n", testNum);
 
 
-  uint buf_size = BSIZE*2+10;
-  char buf[buf_size];
+  int buf_size = BSIZE*141;
+  char* buf = (char*) malloc(sizeof(char)*buf_size);
   init_buf('a', buf, buf_size);
 
   int fd;
@@ -33,6 +33,7 @@ void test1(void){
   //   exit();
   // }
 
+  free(buf);
 
   // printf(2, "TEST %d PASSED!\n\n", testNum);
 }
