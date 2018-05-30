@@ -21,6 +21,9 @@
 #include "buf.h"
 #include "file.h"
 
+// our addition
+#define BLOCKS_FOR_1MB 2048 // Number of blocks needed to keep 1MB amount of data (2^20/2^9 = 2^11 = 2048)
+
 #define min(a, b) ((a) < (b) ? (a) : (b))
 static void itrunc(struct inode*);
 // there should be one superblock per disk device, but we run with
@@ -373,12 +376,19 @@ iunlockput(struct inode *ip)
 static uint
 bmap(struct inode *ip, uint bn)
 {
-  uint addr, *a;
+  uint addr, *a, *a2;
   struct buf *bp;
 
+  // For debugging
+  // cprintf("Going to write to block No. %d\n", bn);
+
   if(bn < NDIRECT){
-    if((addr = ip->addrs[bn]) == 0)
+    if((addr = ip->addrs[bn]) == 0){
       ip->addrs[bn] = addr = balloc(ip->dev);
+
+      if(bn == NDIRECT-1)
+        cprintf("Finished writing 6KB (direct)\n");
+    }
     return addr;
   }
   bn -= NDIRECT;
@@ -387,11 +397,41 @@ bmap(struct inode *ip, uint bn)
     // Load indirect block, allocating if necessary.
     if((addr = ip->addrs[NDIRECT]) == 0)
       ip->addrs[NDIRECT] = addr = balloc(ip->dev);
+    
     bp = bread(ip->dev, addr);
     a = (uint*)bp->data;
     if((addr = a[bn]) == 0){
       a[bn] = addr = balloc(ip->dev);
       log_write(bp);
+      
+      if(bn == NINDIRECT-1)
+        cprintf("Finished writing 70KB (single indirect)\n");
+    }
+    brelse(bp);
+    return addr;
+  }
+  bn -= NINDIRECT;
+
+  if(bn < NDOUBLE_INDIRECT){
+    if((addr = ip->addrs[NDIRECT+1]) == 0)
+      ip->addrs[NDIRECT+1] = addr = balloc(ip->dev);
+
+    bp = bread(ip->dev, addr);
+    a2 = (uint*)bp->data;
+
+    uint index = bn/NINDIRECT;
+    if((addr = a2[index]) == 0)
+      a2[index] = addr = balloc(ip->dev);
+
+    bp = bread(ip->dev, (uint)a2);
+    a = (uint*)bp->data;
+
+    if((addr = a[bn]) == 0){
+      a[bn] = addr = balloc(ip->dev);
+      log_write(bp);
+      
+      if(index == BLOCKS_FOR_1MB-1)
+          cprintf("Finished writing 1MB\n");
     }
     brelse(bp);
     return addr;
