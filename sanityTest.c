@@ -6,6 +6,7 @@
 #include <math.h>
 
 #define BSIZE      512
+#define NB_1MB     2049
 
 void runTests();
 void init_buf(char init_char, char* buf, int buf_size);
@@ -16,22 +17,31 @@ void test1(void){
   printf(2, "TEST %d:\n", testNum);
 
 
-  int buf_size = BSIZE*141;
+  int buf_size = BSIZE*2100;
   char* buf = (char*) malloc(sizeof(char)*buf_size);
   init_buf('a', buf, buf_size);
 
   int fd;
   fd = open("alon", O_CREATE|O_RDWR);
-  if(write(fd, buf, buf_size) != buf_size) {
+  if(write(fd, buf, BSIZE*12) != BSIZE*12) {
     printf(1, "cat: write error\n");
     exit();
   }
+  printf(1, "Finished writing 6KB (direct)\n");
 
-  // init_buf('b', buf, buf_size);
-  // if(write(fd, buf, buf_size) != buf_size) {
-  //   printf(1, "cat: write error\n");
-  //   exit();
-  // }
+  if(write(fd, buf, BSIZE*128) != BSIZE*128) {
+    printf(1, "cat: write error\n");
+    exit();
+  }
+  printf(1, "Finished writing 70KB (single indirect)\n");
+
+
+  if(write(fd, buf, BSIZE*1909) != BSIZE*1909) {
+    printf(1, "cat: write error\n");
+    exit();
+  }
+  printf(1, "Finished writing 1MB\n");
+
 
   free(buf);
 
