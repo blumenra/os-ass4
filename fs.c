@@ -22,7 +22,7 @@
 #include "file.h"
 
 // our addition
-#define BLOCKS_FOR_1MB 2048 // Number of blocks needed to keep 1MB amount of data (2^20/2^9 = 2^11 = 2048)
+#define INDEX_OF_BLOCKS_FOR_1MB_IN_DOUBLE 1908 // Number of blocks needed to keep 1MB amount of data (2^20/2^9 = 2^11 = 2048)
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 static void itrunc(struct inode*);
@@ -376,7 +376,7 @@ iunlockput(struct inode *ip)
 static uint
 bmap(struct inode *ip, uint bn)
 {
-  uint addr, *a, *a2;
+  uint addr, *a;
   struct buf *bp;
 
   // For debugging
@@ -386,9 +386,10 @@ bmap(struct inode *ip, uint bn)
     if((addr = ip->addrs[bn]) == 0){
       ip->addrs[bn] = addr = balloc(ip->dev);
 
-      if(bn == NDIRECT-1)
-        cprintf("Finished writing 6KB (direct)\n");
+      // if(bn == NDIRECT-1)
+      //   cprintf("Finished writing 6KB (direct)\n");
     }
+    // cprintf("**address of the block %d**\n", addr);
     return addr;
   }
   bn -= NDIRECT;
@@ -404,36 +405,44 @@ bmap(struct inode *ip, uint bn)
       a[bn] = addr = balloc(ip->dev);
       log_write(bp);
       
-      if(bn == NINDIRECT-1)
-        cprintf("Finished writing 70KB (single indirect)\n");
+      // if(bn == NINDIRECT-1)
+      //   cprintf("Finished writing 70KB (single indirect)\n");
     }
     brelse(bp);
+    // cprintf("**address of the block %d**\n", addr);
     return addr;
   }
   bn -= NINDIRECT;
 
   if(bn < NDOUBLE_INDIRECT){
-    if((addr = ip->addrs[NDIRECT+1]) == 0)
+    if((addr = ip->addrs[NDIRECT+1]) == 0){
       ip->addrs[NDIRECT+1] = addr = balloc(ip->dev);
+    }
 
     bp = bread(ip->dev, addr);
-    a2 = (uint*)bp->data;
+    a = (uint*)bp->data;
 
     uint index = bn/NINDIRECT;
-    if((addr = a2[index]) == 0)
-      a2[index] = addr = balloc(ip->dev);
+    if((addr = a[index]) == 0){
+      a[index] = addr = balloc(ip->dev);
+    }
+    brelse(bp);
 
-    bp = bread(ip->dev, (uint)a2);
+    bp = bread(ip->dev, (uint)addr);
     a = (uint*)bp->data;
+
+    int tmpBn = bn;
+    bn %= NINDIRECT;
 
     if((addr = a[bn]) == 0){
       a[bn] = addr = balloc(ip->dev);
       log_write(bp);
       
-      if(index == BLOCKS_FOR_1MB-1)
-          cprintf("Finished writing 1MB\n");
+      // if(tmpBn == INDEX_OF_BLOCKS_FOR_1MB_IN_DOUBLE)
+      //     cprintf("Finished writing 1MB\n");
     }
     brelse(bp);
+    // cprintf("**address of the block %d**\n", addr);
     return addr;
   }
 
