@@ -443,3 +443,35 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+int
+sys_symlink(void){
+
+  char *oldpath, *newpath;
+
+  if(argstr(0, &oldpath) < 0)
+    return -1;
+
+  if(argstr(1, &newpath) < 0)
+    return -1;
+
+  return symlink(oldpath, newpath);
+}
+
+int
+sys_readlink(void){
+  
+  char *pathname, *buf;
+  int bufsize;
+
+  if(argstr(0, &pathname) < 0)
+    return -1;
+
+  if(argstr(1, &buf) < 0)
+    return -1;
+
+  if(argint(2, &bufsize) < 0)
+    return -1;
+
+  return readlink(pathname, buf, bufsize);
+}

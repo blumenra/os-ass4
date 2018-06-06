@@ -1,3 +1,5 @@
+typedef uint size_t;
+
 struct buf;
 struct context;
 struct file;
@@ -52,6 +54,8 @@ struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, char*, uint, uint);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
+int 			symlink(const char *oldpath, const char * newpath);
+int 			readlink(const char * pathname, char * buf, size_t bufsize);
 
 // ide.c
 void            ideinit(void);

@@ -48,6 +48,34 @@ void test1(void){
   // printf(2, "TEST %d PASSED!\n\n", testNum);
 }
 
+void test2(void){
+
+  int testNum = 2;
+  printf(2, "TEST %d:\n", testNum);
+
+  char *oldpath = "a.txt";
+  char *newpath = "b.txt";
+  symlink(oldpath, newpath);
+  
+
+  // printf(2, "TEST %d PASSED!\n\n", testNum);
+}
+
+void test3(void){
+
+  int testNum = 3;
+  printf(2, "TEST %d:\n", testNum);
+
+  char *pathname = "a.txt";
+  size_t bufsize = 20;
+  char buf[bufsize];
+
+  readlink(pathname, buf, bufsize);
+  
+
+  // printf(2, "TEST %d PASSED!\n\n", testNum);
+}
+
 void init_buf(char init_char, char* buf, int buf_size){
 
   for(int i=0; i < buf_size; i++)
@@ -76,9 +104,9 @@ void runTests(){
   
   if(fork() == 0){
 
-    TEST(test1);
-    // TEST(test2);
-    // TEST(test3);
+    // TEST(test1);
+    TEST(test2);
+    TEST(test3);
     // TEST(test4);
 
     exit();

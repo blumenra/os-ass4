@@ -1,6 +1,8 @@
 struct stat;
 struct rtcdate;
 
+typedef uint size_t;
+
 // system calls
 int fork(void);
 int exit(void) __attribute__((noreturn));
@@ -23,6 +25,8 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int	symlink(const char *oldpath, const char * newpath);
+int readlink(const char * pathname, char * buf, size_t bufsize);
 
 // ulib.c
 int stat(char*, struct stat*);
