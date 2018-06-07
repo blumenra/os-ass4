@@ -514,7 +514,7 @@ readi(struct inode *ip, char *dst, uint off, uint n)
 
   for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
     // For debugging
-    cprintf("Going to READ from block No. %d\n", off/BSIZE);
+    // cprintf("Going to READ from block No. %d\n", off/BSIZE);
 
     bp = bread(ip->dev, bmap(ip, off/BSIZE));
     m = min(n - tot, BSIZE - off%BSIZE);
@@ -546,7 +546,7 @@ writei(struct inode *ip, char *src, uint off, uint n)
 
   for(tot=0; tot<n; tot+=m, off+=m, src+=m){
     // For debugging
-    cprintf("Going to WRITE to block No. %d\n", off/BSIZE);
+    // cprintf("Going to WRITE to block No. %d\n", off/BSIZE);
     
     bp = bread(ip->dev, bmap(ip, off/BSIZE));
     m = min(n - tot, BSIZE - off%BSIZE);
@@ -721,19 +721,3 @@ nameiparent(char *path, char *name)
   return namex(path, 1, name);
 }
 
-
-int
-symlink(const char *oldpath, const char * newpath){
-
-  cprintf("Inside symlink!\n");
-
-  return 0;
-}
-
-int
-readlink(const char * pathname, char * buf, size_t bufsize){
-  
-  cprintf("Inside readlink!\n");
-
-  return 0;
-}
