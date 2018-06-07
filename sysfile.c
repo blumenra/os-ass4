@@ -448,14 +448,27 @@ int
 sys_symlink(void){
 
   char *oldpath, *newpath;
+  struct inode *ip;
+  int ret = 0;
+
+  begin_op();
 
   if(argstr(0, &oldpath) < 0)
     return -1;
 
   if(argstr(1, &newpath) < 0)
     return -1;
+  
+  ip = create(newpath, T_SYMLINK, 0, 0);
 
-  return symlink(oldpath, newpath);
+  if(writei(ip, oldpath, 0, strlen(oldpath)) == -1){
+    ret = -1;
+  }
+
+  iunlockput(ip);
+  end_op();
+
+  return ret;
 }
 
 int
@@ -463,6 +476,8 @@ sys_readlink(void){
   
   char *pathname, *buf;
   int bufsize;
+
+  begin_op();
 
   if(argstr(0, &pathname) < 0)
     return -1;
@@ -473,5 +488,10 @@ sys_readlink(void){
   if(argint(2, &bufsize) < 0)
     return -1;
 
-  return readlink(pathname, buf, bufsize);
+  cprintf("Inside readlink!\n");
+
+  end_op();
+
+  return 0;
 }
+
