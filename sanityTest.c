@@ -70,16 +70,19 @@ void test2(void){
 
   char *oldpath3 = "c";
   char *newpath3 = "a.txt";
-  if(symlink(oldpath3, newpath3) == -1){
+  int ret;
+  if((ret = symlink(oldpath3, newpath3)) == -1){
     printf(2, "FAILED!\n");
   }
-  else{
+  else if(ret == 0){
     printf(2, "PASSED!\n");
   }
+  else
+    printf(2, "FAILED!\n");
 
 
 
-  
+
   // printf(2, "TEST %d PASSED!\n\n", testNum);
 }
 
