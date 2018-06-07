@@ -97,7 +97,11 @@ void test3(void){
   int testNum = 3;
   printf(2, "TEST %d:\n", testNum);
 
-  char *pathname1 = "a.txt";
+
+  /*
+  * tests pathname which does not exists
+  */
+  char *pathname1 = "bla.txt";
   size_t bufsize = 20;
   char buf[bufsize];
   int ret;
@@ -107,7 +111,9 @@ void test3(void){
   else
     printf(2, "FAILED!\n");
 
-
+  /*
+  * tests pathname which is NOT symbolic link
+  */
   char *pathname2 = "kill";
   if((ret = readlink(pathname2, buf, bufsize)) == -1)
       printf(2, "PASSED!\n");
@@ -115,7 +121,9 @@ void test3(void){
     printf(2, "FAILED!\n");
 
 
-
+  /*
+  * tests pathname which is NOT symbolic link
+  */
   char *pathname3 = "alon.txt";
   size_t bufsize3 = strlen(pathname3)-2;
   char buf3[bufsize3];
@@ -131,35 +139,34 @@ void test3(void){
 
 
   char *pathname4 = "eran.txt";
-  size_t bufsize4 = 20;
-  char buf4[bufsize4];
   char *pathnameTMP = "tmp.txt";
   char* content = "hello world!";
+  size_t bufsize4 = strlen(pathnameTMP)+1;
+  char buf4[bufsize4];
   fd = open(pathnameTMP, O_CREATE|O_RDWR);
   if(write(fd, content, strlen(content)) != strlen(content)) {
     printf(2, "test3: write error\n");
   }
 
   if((ret = symlink(pathnameTMP, pathname4)) != 0)
-    printf(2, "FAILED!\n");
+    printf(2, "FAILED1!\n");
 
-  if((ret = readlink(pathname4, buf4, strlen(content))) == -1)
-    printf(2, "FAILED!\n");
+  if((ret = readlink(pathname4, buf4, bufsize4)) == -1)
+    printf(2, "FAILED2!\n");
   else if(ret == 0){
-    if(strcmp(buf4, content) == 0)
+    if(strcmp(buf4, pathnameTMP) == 0)
       printf(2, "PASSED!\n");
     else
-      printf(2, "FAILED!\n");
+      printf(2, "FAILED3!\n");
   }
   else
-    printf(2, "FAILED!\n");
-
+    printf(2, "FAILED4!\n");
 
   close(fd);
 
 
   printf(1, "\n");
-  // printf(2, "TEST %d PASSED!\n\n", testNum);
+  printf(2, "TEST %d PASSED!\n\n", testNum);
 }
 
 void init_buf(char init_char, char* buf, int buf_size){
@@ -168,6 +175,37 @@ void init_buf(char init_char, char* buf, int buf_size){
     buf[i] = init_char;
 }
 
+void test4(void){
+
+  int testNum = 4;
+  printf(2, "TEST %d:\n", testNum);
+
+  char *oldpath1 = "yosi.txt";
+  char* content = "Hello World!";
+  int fd;
+
+  fd = open(oldpath1, O_CREATE|O_RDWR);
+
+  if(write(fd, content, strlen(content)) != strlen(content)) {
+    printf(2, "test4: write error\n");
+  }
+
+  char *newpath1 = "ben.txt";
+  if(symlink(oldpath1, newpath1) == -1)
+    printf(2, "FAILED!\n");
+  else
+    printf(2, "PASSED!\n");
+
+  fd = open(newpath1, O_RDWR|O_DEREF);
+
+  // if(fork() == 0){
+
+  //   exec("cat", "");
+  // }
+
+  printf(1, "\n");
+  // printf(2, "TEST %d PASSED!\n\n", testNum);
+}
 
 void TEST(void (*test)(void)){
   if(fork() == 0){
@@ -191,9 +229,9 @@ void runTests(){
   if(fork() == 0){
 
     // TEST(test1);
-    TEST(test2);
-    TEST(test3);
-    // TEST(test4);
+    // TEST(test2);
+    // TEST(test3);
+    TEST(test4);
 
     exit();
   }
