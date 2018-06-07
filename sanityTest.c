@@ -48,6 +48,9 @@ void test1(void){
   // printf(2, "TEST %d PASSED!\n\n", testNum);
 }
 
+/*
+* Tests symlink
+*/
 void test2(void){
 
   int testNum = 2;
@@ -61,6 +64,9 @@ void test2(void){
   // printf(2, "TEST %d PASSED!\n\n", testNum);
 }
 
+/*
+* Tests readlink
+*/
 void test3(void){
 
   int testNum = 3;
