@@ -16,6 +16,7 @@
 #include "file.h"
 #include "fcntl.h"
 
+
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int
@@ -453,19 +454,30 @@ sys_symlink(void){
 
   begin_op();
 
-  if(argstr(0, &oldpath) < 0)
+  if((argstr(0, &oldpath) < 0) || (argstr(1, &newpath) < 0)){
+    end_op();
     return -1;
+  }
 
-  if(argstr(1, &newpath) < 0)
-    return -1;
-  
-  ip = create(newpath, T_SYMLINK, 0, 0);
+  if(namei(newpath) != 0){
+
+    ret = -1;
+    goto finish;
+  }
+
+  if((ip = create(newpath, T_SYMLINK, 0, 0)) == 0){
+
+    ret = -1;
+    goto finish;
+  }
 
   if(writei(ip, oldpath, 0, strlen(oldpath)) == -1){
     ret = -1;
+    iunlockput(ip);
+    goto finish;
   }
 
-  iunlockput(ip);
+  finish:
   end_op();
 
   return ret;
