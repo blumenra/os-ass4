@@ -56,11 +56,30 @@ void test2(void){
   int testNum = 2;
   printf(2, "TEST %d:\n", testNum);
 
-  char *oldpath = "a.txt";
-  char *newpath = "b.txt";
-  symlink(oldpath, newpath);
+  char *oldpath1 = "c";
+  char *newpath1 = "a/b.txt";
+  if(symlink(oldpath1, newpath1) == -1){
+    printf(2, "PASSED!\n");
+  }
   
+  char *oldpath2 = "c";
+  char *newpath2 = "kill";
+  if(symlink(oldpath2, newpath2) == -1){
+    printf(2, "PASSED!\n");
+  }
 
+  char *oldpath3 = "c";
+  char *newpath3 = "a.txt";
+  if(symlink(oldpath3, newpath3) == -1){
+    printf(2, "FAILED!\n");
+  }
+  else{
+    printf(2, "PASSED!\n");
+  }
+
+
+
+  
   // printf(2, "TEST %d PASSED!\n\n", testNum);
 }
 
