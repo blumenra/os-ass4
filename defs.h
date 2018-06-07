@@ -56,6 +56,8 @@ void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
 int 			symlink(const char *oldpath, const char * newpath);
 int 			readlink(const char * pathname, char * buf, size_t bufsize);
+int 			get_next_path(struct inode* ip, char* nextpath, uint size); //our addition
+struct inode* 	non_deref_namei(char *path); //our addition
 
 // ide.c
 void            ideinit(void);

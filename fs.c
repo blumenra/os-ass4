@@ -21,6 +21,7 @@
 #include "buf.h"
 #include "file.h"
 
+
 // our addition
 #define INDEX_OF_BLOCKS_FOR_1MB_IN_DOUBLE 1908 // Number of blocks needed to keep 1MB amount of data (2^20/2^9 = 2^11 = 2048)
 
@@ -669,13 +670,17 @@ skipelem(char *path, char *name)
   return path;
 }
 
+
 // Look up and return the inode for a path name.
 // If parent != 0, return the inode for the parent and copy the final
 // path element into name, which must have room for DIRSIZ bytes.
 // Must be called inside a transaction since it calls iput().
+// mode = 1: dereference
+// mode = 0: non-dereference
 static struct inode*
-namex(char *path, int nameiparent, char *name)
+namex(char *path, int nameiparent, char *name, uint count, int mode)
 {
+  
   struct inode *ip, *next;
 
   if(*path == '/')
@@ -683,22 +688,50 @@ namex(char *path, int nameiparent, char *name)
   else
     ip = idup(myproc()->cwd);
 
+
+
+
   while((path = skipelem(path, name)) != 0){
     ilock(ip);
+    cprintf("ip->type: %d\n", ip->type);
+    
+    cprintf("path: %s\n", path);
+    cprintf("name: %s\n", name);
+
+    if(mode && ip->type == T_SYMLINK){
+      
+      cprintf("***1\n");
+      
+      cprintf("count: %d\n", count);
+      char nextpath[strlen(path)];
+      for(int i=0; i < strlen(path); i++)
+        nextpath[i] = 0;
+
+      if(!get_next_path(ip, nextpath, strlen(path))){
+        panic("namex: broken symlink! damn..");
+      }
+
+      cprintf("nextpath: %s\n", nextpath);
+      ip = namex(nextpath, nameiparent, name, count, mode);
+    }
     if(ip->type != T_DIR){
       iunlockput(ip);
       return 0;
     }
+    cprintf("***2\n");
     if(nameiparent && *path == '\0'){
       // Stop one level early.
       iunlock(ip);
       return ip;
     }
+    cprintf("***3\n");
     if((next = dirlookup(ip, name, 0)) == 0){
       iunlockput(ip);
       return 0;
     }
+    cprintf("***4\n");
     iunlockput(ip);
+    cprintf("***5\n");
     ip = next;
   }
   if(nameiparent){
@@ -708,16 +741,39 @@ namex(char *path, int nameiparent, char *name)
   return ip;
 }
 
+
+struct inode*
+non_deref_namei(char *path)
+{
+  char name[DIRSIZ];
+  return namex(path, 0, name, 0, 0);
+}
+
+
 struct inode*
 namei(char *path)
 {
   char name[DIRSIZ];
-  return namex(path, 0, name);
+  return namex(path, 0, name, 0, 1);
 }
 
 struct inode*
 nameiparent(char *path, char *name)
 {
-  return namex(path, 1, name);
+  return namex(path, 1, name, 0, 0);
 }
 
+
+int
+get_next_path(struct inode* ip, char* nextpath, uint size){
+
+  if(ip->type != T_SYMLINK)
+    return 0;
+
+  if(readi(ip, nextpath, 0, size) > size){
+    cprintf("get_next_path: couldn't read next path!\n");
+    return 0;
+  }
+
+  return 1;
+}

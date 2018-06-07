@@ -303,7 +303,20 @@ sys_open(void)
       end_op();
       return -1;
     }
-  } else {
+  }
+  else if(omode & O_DEREF){
+    if((ip = non_deref_namei(path)) == 0){
+      end_op();
+      return -1;
+    }
+    ilock(ip);
+    if(ip->type == T_DIR && omode != O_RDONLY){
+      iunlockput(ip);
+      end_op();
+      return -1;
+    }
+  }
+  else {
     if((ip = namei(path)) == 0){
       end_op();
       return -1;
@@ -451,6 +464,9 @@ sys_symlink(void){
   char *oldpath, *newpath;
   struct inode *ip;
   int ret = 0;
+  // uint size = 8;
+  // char buf[size];
+  // buf[size-1] = 0;
 
   begin_op();
 
@@ -459,7 +475,7 @@ sys_symlink(void){
     return -1;
   }
 
-  if(namei(newpath) != 0){
+  if((ip = namei(newpath)) != 0){
 
     ret = -1;
     goto finish;
@@ -477,6 +493,11 @@ sys_symlink(void){
     goto finish;
   }
 
+
+  // get_next_path(ip, buf, size);
+  cprintf("ip->type: %d\n", ip->type);
+
+
   finish:
   end_op();
 
@@ -488,18 +509,25 @@ sys_readlink(void){
   
   char *pathname, *buf;
   int bufsize;
+  struct inode *ip;
   int ret = 0;
-  
+  // int poff;
+
   begin_op();
 
   if((argstr(0, &pathname) < 0) || (argstr(1, &buf) < 0) || (argint(2, &bufsize) < 0)){
     ret = -1;
-    goto finish;
   }
 
-  finish:
+  ip = namei(pathname);
+  
+  // validation checks
+  if(ip == 0 || !get_next_path(ip, buf, bufsize)){
+
+    ret = -1;
+  }
+
   end_op();
 
   return ret;
 }
-
