@@ -488,22 +488,18 @@ sys_readlink(void){
   
   char *pathname, *buf;
   int bufsize;
-
+  int ret = 0;
+  
   begin_op();
 
-  if(argstr(0, &pathname) < 0)
-    return -1;
+  if((argstr(0, &pathname) < 0) || (argstr(1, &buf) < 0) || (argint(2, &bufsize) < 0)){
+    ret = -1;
+    goto finish;
+  }
 
-  if(argstr(1, &buf) < 0)
-    return -1;
-
-  if(argint(2, &bufsize) < 0)
-    return -1;
-
-  cprintf("Inside readlink!\n");
-
+  finish:
   end_op();
 
-  return 0;
+  return ret;
 }
 
