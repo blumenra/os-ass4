@@ -681,15 +681,16 @@ static struct inode*
 namex(char *path, int nameiparent, char *name, uint count, int mode)
 {
   
-  cprintf("Satrting to namex: \n");
-  cprintf("   path: %s\n", path);
-  cprintf("   nameiparent: %d\n", nameiparent);
-  cprintf("   name: %s\n", name);
-  cprintf("   count: %d\n", count);
-  cprintf("   mode: %d\n", mode);
+  // cprintf("Satrting to namex: \n");
+  // cprintf("   path: %s\n", path);
+  // cprintf("   nameiparent: %d\n", nameiparent);
+  // cprintf("   name: %s\n", name);
+  // cprintf("   count: %d\n", count);
+  // cprintf("   mode: %d\n", mode);
 
-  char * orgPath = path;
+  // char * orgPath = path;
   struct inode *ip, *next;
+  char buf[64];
 
   if(*path == '/')
     ip = iget(ROOTDEV, ROOTINO);
@@ -697,7 +698,7 @@ namex(char *path, int nameiparent, char *name, uint count, int mode)
     ip = idup(myproc()->cwd);
 
 
-  cprintf("****The inode type of %s is %d\n", path, ip->type);
+  // cprintf("****The inode type of %s is %d\n", path, ip->type);
 
 
   while((path = skipelem(path, name)) != 0){
@@ -724,26 +725,33 @@ namex(char *path, int nameiparent, char *name, uint count, int mode)
 
     // cprintf("next content: %s\n", next->addrs[0]);
 
+
+
+    if(mode || *path!='\0')
+    {
+      next= recursive_readlink(buf,next, 16, 0);
+    }
+
     ip = next;
 
-    if((mode && ip->type == T_SYMLINK) || *path != '\0'){
-    // if(next->type == T_SYMLINK){
-    // if(mode){
+    // if((mode && ip->type == T_SYMLINK) || *path != '\0'){
+    // // if(next->type == T_SYMLINK){
+    // // if(mode){
       
-      cprintf("count: %d\n", count);
-      char nextpath[2];
-      for(int i=0; i < 2; i++)
-        nextpath[i] = 0;
+    //   cprintf("count: %d\n", count);
+    //   char nextpath[2];
+    //   for(int i=0; i < 2; i++)
+    //     nextpath[i] = 0;
 
-      if(!get_next_path(ip, nextpath, 2)){
-        panic("namex: broken symlink! damn..");
-      }
+    //   if(!get_next_path(ip, nextpath, 2)){
+    //     panic("namex: broken symlink! damn..");
+    //   }
 
 
 
-      cprintf("nextpath: %s\n", nextpath);
-      ip = namex(nextpath, nameiparent, name, ++count, mode);
-    }
+    //   cprintf("nextpath: %s\n", nextpath);
+    //   ip = namex(nextpath, nameiparent, name, ++count, mode);
+    // }
 
   }
   if(nameiparent){
@@ -756,7 +764,7 @@ namex(char *path, int nameiparent, char *name, uint count, int mode)
   // cprintf("ip->type: %d\n", ip->type);
   // // cprintf("next->type: %d\n", next->type);
   // cprintf("mode: %d\n", mode);
-  cprintf("The inode type of %s is %d\n", orgPath, ip->type);
+  // cprintf("The inode type of %s is %d\n", orgPath, ip->type);
 
 
   return ip;
