@@ -693,16 +693,14 @@ namex(char *path, int nameiparent, char *name, uint count, int mode)
 
   while((path = skipelem(path, name)) != 0){
     ilock(ip);
-    cprintf("ip->type: %d\n", ip->type);
+    // cprintf("ip->type: %d\n", ip->type);
     
-    cprintf("path: %s\n", path);
-    cprintf("name: %s\n", name);
+    // cprintf("path: %s\n", path);
+    // cprintf("name: %s\n", name);
 
     if(mode && ip->type == T_SYMLINK){
       
-      cprintf("***1\n");
-      
-      cprintf("count: %d\n", count);
+      // cprintf("count: %d\n", count);
       char nextpath[strlen(path)];
       for(int i=0; i < strlen(path); i++)
         nextpath[i] = 0;
@@ -718,20 +716,20 @@ namex(char *path, int nameiparent, char *name, uint count, int mode)
       iunlockput(ip);
       return 0;
     }
-    cprintf("***2\n");
+    // cprintf("***2\n");
     if(nameiparent && *path == '\0'){
       // Stop one level early.
       iunlock(ip);
       return ip;
     }
-    cprintf("***3\n");
+    // cprintf("***3\n");
     if((next = dirlookup(ip, name, 0)) == 0){
       iunlockput(ip);
       return 0;
     }
-    cprintf("***4\n");
+    // cprintf("***4\n");
     iunlockput(ip);
-    cprintf("***5\n");
+    // cprintf("***5\n");
     ip = next;
   }
   if(nameiparent){
@@ -743,10 +741,10 @@ namex(char *path, int nameiparent, char *name, uint count, int mode)
 
 
 struct inode*
-non_deref_namei(char *path)
+deref_namei(char *path)
 {
   char name[DIRSIZ];
-  return namex(path, 0, name, 0, 0);
+  return namex(path, 0, name, 0, 1);
 }
 
 
@@ -754,7 +752,7 @@ struct inode*
 namei(char *path)
 {
   char name[DIRSIZ];
-  return namex(path, 0, name, 0, 1);
+  return namex(path, 0, name, 0, 0);
 }
 
 struct inode*
