@@ -196,12 +196,6 @@ void test4(void){
   else
     printf(2, "PASSED!\n");
 
-  fd = open(newpath1, O_RDWR|O_DEREF);
-
-  // if(fork() == 0){
-
-  //   exec("cat", "");
-  // }
 
   printf(1, "\n");
   // printf(2, "TEST %d PASSED!\n\n", testNum);
