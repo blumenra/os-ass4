@@ -305,7 +305,7 @@ sys_open(void)
     }
   }
   else if(omode & O_DEREF){
-    if((ip = non_deref_namei(path)) == 0){
+    if((ip = deref_namei(path)) == 0){
       end_op();
       return -1;
     }
@@ -493,10 +493,7 @@ sys_symlink(void){
     goto finish;
   }
 
-
-  // get_next_path(ip, buf, size);
-  cprintf("ip->type: %d\n", ip->type);
-
+  iunlockput(ip);
 
   finish:
   end_op();
