@@ -62,15 +62,7 @@ void test2(void){
     printf(2, "PASSED!\n");
   else
     printf(2, "FAILED!\n");
-  
-
-  char *oldpath2 = "c";
-  char *newpath2 = "kill";
-  if(symlink(oldpath2, newpath2) == -1)
-    printf(2, "PASSED!\n");
-  else
-    printf(2, "FAILED!\n");
-    
+   
 
 
   char *oldpath3 = "c";
@@ -102,11 +94,11 @@ void test3(void){
   * tests pathname which does not exists
   */
   char *pathname1 = "bla.txt";
-  size_t bufsize = 20;
-  char buf[bufsize];
+  size_t bufsize1 = 20;
+  char buf1[bufsize1];
   int ret;
 
-  if((ret = readlink(pathname1, buf, bufsize)) == -1)
+  if((ret = readlink(pathname1, buf1, bufsize1)) == -1)
       printf(2, "PASSED!\n");
   else
     printf(2, "FAILED!\n");
@@ -114,8 +106,10 @@ void test3(void){
   /*
   * tests pathname which is NOT symbolic link
   */
-  char *pathname2 = "kill";
-  if((ret = readlink(pathname2, buf, bufsize)) == -1)
+  char *pathname2 = "cat";
+  size_t bufsize2 = 20;
+  char buf2[bufsize2];
+  if((ret = readlink(pathname2, buf2, bufsize2)) == -1)
       printf(2, "PASSED!\n");
   else
     printf(2, "FAILED!\n");
@@ -223,7 +217,7 @@ void runTests(){
   if(fork() == 0){
 
     // TEST(test1);
-    // TEST(test2);
+    TEST(test2);
     // TEST(test3);
     TEST(test4);
 

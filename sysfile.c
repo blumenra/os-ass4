@@ -253,11 +253,27 @@ create(char *path, short type, short major, short minor)
   if((ip = dirlookup(dp, name, &off)) != 0){
     iunlockput(dp);
     ilock(ip);
+    
+    
+
+    if(ip->type == T_SYMLINK)
+      cprintf("*********************BAA!");
+    
+
+
     if(type == T_FILE && ip->type == T_FILE)
       return ip;
     iunlockput(ip);
     return 0;
   }
+
+  cprintf("inside create. path: %s\n", path);
+  cprintf("inside create. type: %d\n", type);
+  
+  // ilock(dp);
+  // cprintf("inside create. ip->type: %d\n", ip->type);
+  // iunlock(ip);
+
 
   if((ip = ialloc(dp->dev, type)) == 0)
     panic("create: ialloc");
@@ -304,20 +320,22 @@ sys_open(void)
       return -1;
     }
   }
-  else if(omode & O_DEREF){
-    if((ip = deref_namei(path)) == 0){
+  else if(omode & O_NON_DEREF){
+    cprintf("Hey1111: path: %s\n", path);
+    if((ip = namei(path)) == 0){
       end_op();
       return -1;
     }
     ilock(ip);
-    if(ip->type == T_DIR && omode != O_RDONLY){
+    if(ip->type == T_DIR && omode != O_RDONLY && omode != O_NON_DEREF){
       iunlockput(ip);
       end_op();
       return -1;
     }
   }
   else {
-    if((ip = namei(path)) == 0){
+    cprintf("Hey2222: path: %s\n", path);
+    if((ip = deref_namei(path)) == 0){
       end_op();
       return -1;
     }
@@ -391,7 +409,8 @@ sys_chdir(void)
   struct proc *curproc = myproc();
   
   begin_op();
-  if(argstr(0, &path) < 0 || (ip = namei(path)) == 0){
+  if(argstr(0, &path) < 0 || (ip = deref_namei(path)) == 0){
+  // if(argstr(0, &path) < 0 || (ip = namei(path)) == 0){
     end_op();
     return -1;
   }
@@ -475,11 +494,6 @@ sys_symlink(void){
     return -1;
   }
 
-  if((ip = namei(newpath)) != 0){
-
-    ret = -1;
-    goto finish;
-  }
 
   if((ip = create(newpath, T_SYMLINK, 0, 0)) == 0){
 
@@ -520,11 +534,16 @@ sys_readlink(void){
   
   // validation checks
   if(ip == 0 || !get_next_path(ip, buf, bufsize)){
-
+    
     ret = -1;
   }
-
+  
   end_op();
 
   return ret;
 }
+
+
+
+
+
