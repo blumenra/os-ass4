@@ -23,7 +23,7 @@ exec(char *path, char **argv)
 
   // cprintf("inside exec: path: %s\n", path);
 
-  if((ip = deref_namei(path)) == 0){
+  if((ip = namei(path)) == 0){
   // if((ip = namei(path)) == 0){
     end_op();
     cprintf("exec: fail\n");

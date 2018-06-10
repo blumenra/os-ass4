@@ -678,109 +678,219 @@ skipelem(char *path, char *name)
 // mode = 1: dereference
 // mode = 0: non-dereference
 static struct inode*
-namex(char *path, int nameiparent, char *name, uint count, int mode)
+namex(char *path, int nameiparent, char *name, int ret_last_symlink)
 {
   
-  cprintf("Satrting to namex: \n");
-  cprintf("   path: %s\n", path);
-  // cprintf("   nameiparent: %d\n", nameiparent);
-  // cprintf("   name: %s\n", name);
-  // cprintf("   count: %d\n", count);
-  // cprintf("   mode: %d\n", mode);
 
-  // char * orgPath = path;
+ char rec_buf[DIRSIZ];
   struct inode *ip, *next;
-  // char buf[64];
+  int deref_counter = 0;
+  struct inode *symlink = 0;  //in case called from READLINK. save the last symlink
+  //char * path_beginning = path;
+  while(deref_counter < MAX_DEREFERENCE){
+      if(*path == '/')  //if absolute address
+        ip = iget(ROOTDEV, ROOTINO);  //inode 1 of root.
+      else
+        ip = idup(myproc()->cwd);     //Relative address  -   inode of the current working directory
+    //   skipelem("c", name) = "c", setting name = "b"
+      while((path = skipelem(path, name)) != 0){
+        ilock(ip);
+        if(ip->type != T_DIR){
+          iunlockput(ip);
+          return 0;
+        }
+        //reaching here => ip is directory-
+        if(nameiparent && *path == '\0'){
+          // Stop one level early.
+          iunlock(ip);
+          return ip;
+        }
+        if((next = dirlookup(ip, name, 0)) == 0){
+          iunlockput(ip); // if file (or dir) not found in the dir, return 0;
+          return 0;
+        }
+        iunlockput(ip);
+        ip = next;
+      }
+      
+      if(nameiparent){
+        iput(ip);
+        return 0;
+      }
+      if(ip->type != T_SYMLINK)
+        break;  //break and return the ip.
+      else
+        symlink = ip;
+      
+      //memset(path,0,strlen(path));
+      path=rec_buf;
 
-  if(*path == '/')
-    ip = iget(ROOTDEV, ROOTINO);
+      ///path=readlink(path_beginning,path,rec_buf);
+      memset(path,'\0',DIRSIZ);
+      readi(ip,path,0,ip->size);  //copy the new path to 'path', and do this again.
+      deref_counter++;
+  }
+
+  if(deref_counter >= MAX_DEREFERENCE)
+    return (struct inode*)-1;  
+  if(ret_last_symlink){
+    return symlink;
+  }
+  return ip;
+
+
+
+
+
+
+
+
+
+
+  // ORIGINAL
+  // cprintf("Satrting to namex: \n");
+  // cprintf("   path: %s\n", path);
+  // // cprintf("   nameiparent: %d\n", nameiparent);
+  // // cprintf("   name: %s\n", name);
+  // // cprintf("   count: %d\n", count);
+  // // cprintf("   mode: %d\n", mode);
+
+  // // char * orgPath = path;
+  // struct inode *ip, *next;
+  // // char buf[64];
+
+  // if(*path == '/')
+  //   ip = iget(ROOTDEV, ROOTINO);
+  // else
+  //   ip = idup(myproc()->cwd);
+
+
+  // // cprintf("****The inode type of %s is %d\n", path, ip->type);
+
+
+  // while((path = skipelem(path, name)) != 0){
+  //   cprintf("   path: %s\n", path);
+  //   ilock(ip);
+    
+  //   if(ip->type != T_DIR){
+  //     iunlockput(ip);
+  //     return 0;
+  //   }
+  //   // cprintf("***2\n");
+  //   if(nameiparent && *path == '\0'){
+  //     // Stop one level early.
+  //     iunlock(ip);
+  //     return ip;
+  //   }
+  //   // cprintf("***3\n");
+  //   if((next = dirlookup(ip, name, 0)) == 0){
+  //     iunlockput(ip);
+  //     return 0;
+  //   }
+  //   // cprintf("***4\n");
+  //   iunlockput(ip);
+  //   // cprintf("***5\n");
+
+  //   // cprintf("next content: %s\n", next->addrs[0]);
+
+
+
+  //   // if(mode || *path!='\0')
+  //   // {
+  //   //   next= recursive_readlink(buf,next, 16, 0);
+  //   // }
+
+  //   ip = next;
+
+
+  // }
+  // if(nameiparent){
+  //   iput(ip);
+  //   return 0;
+  // }
+
+  // // cprintf("path: %s\n", path);
+  // // cprintf("name: %s\n", name);
+  // // cprintf("ip->type: %d\n", ip->type);
+  // // // cprintf("next->type: %d\n", next->type);
+  // // cprintf("mode: %d\n", mode);
+  // // cprintf("The inode type of %s is %d\n", orgPath, ip->type);
+  // if((mode && ip->type == T_SYMLINK)){
+  // // if(next->type == T_SYMLINK){
+  // // if(mode){
+    
+  //   cprintf("count: %d\n", count);
+  //   // char nextpath[2];
+  //   // for(int i=0; i < 2; i++)
+  //   //   nextpath[i] = 0;
+  //   cprintf("path before: %s\n", path);
+  //   cprintf("name before: %s\n", name);
+  //   char buf[DIRSIZ];
+  //   memset(buf, '\0', DIRSIZ);
+
+  //   if(!get_next_path(ip, buf, ip->size)){
+  //     panic("namex: broken symlink! damn..");
+  //   }
+
+
+
+  //   cprintf("nextpath: %s\n", buf);
+  //   ip = namex(buf, nameiparent, name, ++count, mode);
+  // }
+
+
+  // return ip;
+}
+
+
+static struct inode*
+no_deref_namex(char *path, int nameiparent, char *name){
+  struct inode *ip, *next;
+
+  if(*path == '/')  //if absolute address
+    ip = iget(ROOTDEV, ROOTINO);  //inode 1 of root.
   else
-    ip = idup(myproc()->cwd);
-
-
-  // cprintf("****The inode type of %s is %d\n", path, ip->type);
-
+    ip = idup(myproc()->cwd);     //Relative address  -   inode of the current working directory
 
   while((path = skipelem(path, name)) != 0){
-    cprintf("   path: %s\n", path);
     ilock(ip);
-    
     if(ip->type != T_DIR){
       iunlockput(ip);
       return 0;
     }
-    // cprintf("***2\n");
+    //reaching here => ip is directory-
+
+    
     if(nameiparent && *path == '\0'){
       // Stop one level early.
       iunlock(ip);
       return ip;
     }
-    // cprintf("***3\n");
     if((next = dirlookup(ip, name, 0)) == 0){
       iunlockput(ip);
       return 0;
     }
-    // cprintf("***4\n");
     iunlockput(ip);
-    // cprintf("***5\n");
-
-    // cprintf("next content: %s\n", next->addrs[0]);
-
-
-
-    // if(mode || *path!='\0')
-    // {
-    //   next= recursive_readlink(buf,next, 16, 0);
-    // }
-
     ip = next;
-
-
   }
   if(nameiparent){
     iput(ip);
     return 0;
   }
-
-  // cprintf("path: %s\n", path);
-  // cprintf("name: %s\n", name);
-  // cprintf("ip->type: %d\n", ip->type);
-  // // cprintf("next->type: %d\n", next->type);
-  // cprintf("mode: %d\n", mode);
-  // cprintf("The inode type of %s is %d\n", orgPath, ip->type);
-  if((mode && ip->type == T_SYMLINK)){
-  // if(next->type == T_SYMLINK){
-  // if(mode){
-    
-    cprintf("count: %d\n", count);
-    // char nextpath[2];
-    // for(int i=0; i < 2; i++)
-    //   nextpath[i] = 0;
-    cprintf("path before: %s\n", path);
-    cprintf("name before: %s\n", name);
-    char buf[DIRSIZ];
-    memset(buf, '\0', DIRSIZ);
-
-    if(!get_next_path(ip, buf, ip->size)){
-      panic("namex: broken symlink! damn..");
-    }
-
-
-
-    cprintf("nextpath: %s\n", buf);
-    ip = namex(buf, nameiparent, name, ++count, mode);
-  }
-
-
   return ip;
+
+
 }
 
 
+
+
+
 struct inode*
-deref_namei(char *path)
+non_deref_namei(char *path)
 {
   char name[DIRSIZ];
-  return namex(path, 0, name, 0, 1);
+  return no_deref_namex(path, 0, name);
 }
 
 
@@ -788,13 +898,13 @@ struct inode*
 namei(char *path)
 {
   char name[DIRSIZ];
-  return namex(path, 0, name, 0, 0);
+  return namex(path, 0, name, 0);
 }
 
 struct inode*
 nameiparent(char *path, char *name)
 {
-  return namex(path, 1, name, 0, 0);
+  return namex(path, 1, name, 0);
 }
 
 

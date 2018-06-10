@@ -335,7 +335,7 @@ sys_open(void)
   }
   else if(omode & O_NON_DEREF){
     // cprintf("Hey1111: path: %s\n", path);
-    if((ip = namei(path)) == 0){
+    if((ip = non_deref_namei(path)) == 0){
       end_op();
       return -1;
     }
@@ -348,12 +348,12 @@ sys_open(void)
   }
   else {
     // cprintf("Hey2222: path: %s\n", path);
-    if((ip = deref_namei(path)) == 0){
+    if((ip = namei(path)) == 0){
       end_op();
       return -1;
     }
     ilock(ip);
-    if(ip->type == T_DIR && omode != O_RDONLY){
+    if(ip->type == T_DIR && omode != O_RDONLY && omode != O_NON_DEREF){
       iunlockput(ip);
       end_op();
       return -1;
@@ -422,7 +422,7 @@ sys_chdir(void)
   struct proc *curproc = myproc();
   
   begin_op();
-  if(argstr(0, &path) < 0 || (ip = deref_namei(path)) == 0){
+  if(argstr(0, &path) < 0 || (ip = namei(path)) == 0){
   // if(argstr(0, &path) < 0 || (ip = namei(path)) == 0){
     end_op();
     return -1;
