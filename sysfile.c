@@ -240,7 +240,7 @@ bad:
 }
 
 static struct inode*
-create(char *path, short type, short major, short minor, int mode)
+create(char *path, short type, short major, short minor)
 {
   uint off;
   struct inode *ip, *dp;
@@ -257,20 +257,20 @@ create(char *path, short type, short major, short minor, int mode)
     
     
 
-    if(ip->type == T_SYMLINK) // the file is already exist and it is symbol link
-    {
-      if(mode)
-      {
-        if((ip = recursive_readlink(buf,ip, 16, 1)) == 0)
-        {
-          return 0;
-        }
-      }
-      else
-      {
-        return ip;
-      }
-    }
+    // if(ip->type == T_SYMLINK) // the file is already exist and it is symbol link
+    // {
+    //   if(mode)
+    //   {
+    //     if((ip = recursive_readlink(buf,ip, 16, 1)) == 0)
+    //     {
+    //       return 0;
+    //     }
+    //   }
+    //   else
+    //   {
+    //     return ip;
+    //   }
+    // }
     
 
 
@@ -280,8 +280,8 @@ create(char *path, short type, short major, short minor, int mode)
     return 0;
   }
 
-  cprintf("inside create. path: %s\n", path);
-  cprintf("inside create. type: %d\n", type);
+  // cprintf("inside create. path: %s\n", path);
+  // cprintf("inside create. type: %d\n", type);
   
   // ilock(dp);
   // cprintf("inside create. ip->type: %d\n", ip->type);
@@ -327,14 +327,14 @@ sys_open(void)
   begin_op();
 
   if(omode & O_CREATE){
-    ip = create(path, T_FILE, 0, 0, 0);
+    ip = create(path, T_FILE, 0, 0);
     if(ip == 0){
       end_op();
       return -1;
     }
   }
   else if(omode & O_NON_DEREF){
-    cprintf("Hey1111: path: %s\n", path);
+    // cprintf("Hey1111: path: %s\n", path);
     if((ip = namei(path)) == 0){
       end_op();
       return -1;
@@ -347,7 +347,7 @@ sys_open(void)
     }
   }
   else {
-    cprintf("Hey2222: path: %s\n", path);
+    // cprintf("Hey2222: path: %s\n", path);
     if((ip = deref_namei(path)) == 0){
       end_op();
       return -1;
@@ -385,7 +385,7 @@ sys_mkdir(void)
   struct inode *ip;
 
   begin_op();
-  if(argstr(0, &path) < 0 || (ip = create(path, T_DIR, 0, 0, 0)) == 0){
+  if(argstr(0, &path) < 0 || (ip = create(path, T_DIR, 0, 0)) == 0){
     end_op();
     return -1;
   }
@@ -405,7 +405,7 @@ sys_mknod(void)
   if((argstr(0, &path)) < 0 ||
      argint(1, &major) < 0 ||
      argint(2, &minor) < 0 ||
-     (ip = create(path, T_DEV, major, minor, 0)) == 0){
+     (ip = create(path, T_DEV, major, minor)) == 0){
     end_op();
     return -1;
   }
@@ -508,7 +508,7 @@ sys_symlink(void){
   }
 
 
-  if((ip = create(newpath, T_SYMLINK, 0, 0, 0)) == 0){
+  if((ip = create(newpath, T_SYMLINK, 0, 0)) == 0){
 
     ret = -1;
     goto finish;
@@ -560,50 +560,50 @@ sys_readlink(void){
 
 
 
-struct inode*
-recursive_readlink(char* pathname, struct inode* source, int recursive_counter, int lock)
-{
+// struct inode*
+// recursive_readlink(char* pathname, struct inode* source, int recursive_counter, int lock)
+// {
 
 
-  struct inode *ip;
-  char buf[64];
-  int n;
+//   struct inode *ip;
+//   char buf[64];
+//   int n;
 
-  if(recursive_counter == 0)
-  {
-    return 0;
-  }
+//   if(recursive_counter == 0)
+//   {
+//     return 0;
+//   }
 
-  if(source == 0)
-  {
-    ip = namei(pathname);
-  }
-  else
-  {
-    ip = source;
-  }
+//   if(source == 0)
+//   {
+//     ip = namei(pathname);
+//   }
+//   else
+//   {
+//     ip = source;
+//   }
 
-  ilock(ip);
+//   ilock(ip);
 
-  if(ip->type != T_SYMLINK)
-  {
-    iunlock(ip);
-    return ip;
-  }
+//   if(ip->type != T_SYMLINK)
+//   {
+//     iunlock(ip);
+//     return ip;
+//   }
 
-  if ((n = readi(ip, buf,0, ip->size)) < 0)
-    goto bad;
-  buf[n]='\0';
+//   if ((n = readi(ip, buf,0, ip->size)) < 0)
+//     goto bad;
+//   buf[n]='\0';
 
-  iunlockput(ip);
+//   iunlockput(ip);
 
-  // copy the name of the link file for we can return it by pathname parameter
-  memmove(pathname, buf, n);
-  pathname[n] ='\0';
+//   // copy the name of the link file for we can return it by pathname parameter
+//   memmove(pathname, buf, n);
+//   pathname[n] ='\0';
 
-  return recursive_readlink(pathname,0, --recursive_counter, 1);
+//   return recursive_readlink(pathname,0, --recursive_counter, 1);
 
-  bad:
-    iunlockput(ip);
-    return 0;
-}
+//   bad:
+//     iunlockput(ip);
+//     return 0;
+// }

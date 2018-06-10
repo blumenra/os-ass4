@@ -21,7 +21,7 @@ exec(char *path, char **argv)
 
   begin_op();
 
-  cprintf("inside exec: path: %s\n", path);
+  // cprintf("inside exec: path: %s\n", path);
 
   if((ip = deref_namei(path)) == 0){
   // if((ip = namei(path)) == 0){
@@ -31,12 +31,12 @@ exec(char *path, char **argv)
   }
   ilock(ip);
 
-  char buf[10];
-  for(int i=0; i < 10; i++)
-    buf[i] = 0; 
+  // char buf[10];
+  // for(int i=0; i < 10; i++)
+  //   buf[i] = 0; 
   
-  readi(ip, buf, 0, 5);
-  cprintf("inside exec: buf: %s\n", buf);
+  // readi(ip, buf, 0, 5);
+  // cprintf("inside exec: buf: %s\n", buf);
   pgdir = 0;
 
   // Check ELF header
@@ -45,7 +45,7 @@ exec(char *path, char **argv)
   if(elf.magic != ELF_MAGIC)
     goto bad;
 
-  cprintf("inside exec: 1: %s\n", buf);
+  // cprintf("inside exec: 1: %s\n", buf);
   
 
   if((pgdir = setupkvm()) == 0)
